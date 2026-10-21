@@ -4,11 +4,11 @@ set -e
 echo "==> [1/5] Updating repository database..."
 sudo pacman -Sy --noconfirm
 
-# Remove Omarchy's pre-bundled Discord web app launcher
-echo "==> [2/5] Removing pre-bundled Discord web shortcut..."
+# Remove Omarchy's pre-bundled Discord web shortcut
+echo "==> [2/5] Cleaning pre-bundled Discord web app..."
 rm -f "$HOME/.local/share/applications/"*discord*.desktop 2>/dev/null || true
 
-# Official Arch packages
+# Official Arch packages (via pacman)
 PACMAN_PKGS=(
     discord
     telegram-desktop
@@ -21,7 +21,7 @@ PACMAN_PKGS=(
 echo "==> [3/5] Installing official repository packages..."
 sudo pacman -S --needed --noconfirm "${PACMAN_PKGS[@]}"
 
-# Ensure yay is present for AUR packages
+# Ensure yay is present
 if ! command -v yay &> /dev/null; then
     echo "==> Installing yay helper..."
     sudo pacman -S --needed --noconfirm base-devel git
@@ -30,11 +30,11 @@ if ! command -v yay &> /dev/null; then
     rm -rf /tmp/yay-bin
 fi
 
-# AUR packages
+# AUR packages (via yay)
 AUR_PKGS=(
     zen-browser-bin
     notesnook-bin
-    stremio-enhanced-bin
+    stremio
     rustdesk-bin
     antigravity-ide
 )
@@ -46,4 +46,4 @@ yay -S --needed --noconfirm "${AUR_PKGS[@]}"
 echo "==> [5/5] Enabling background services..."
 sudo systemctl enable --now bluetooth.service 2>/dev/null || true
 
-echo "==> Installation complete!"
+echo "==> Setup completed successfully!"
