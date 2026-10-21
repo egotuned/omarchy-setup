@@ -1,53 +1,49 @@
 #!/usr/bin/env bash
 set -e
 
-echo "==> [1/4] Updating system databases..."
+echo "==> [1/5] Updating repository database..."
 sudo pacman -Sy --noconfirm
 
-# Standard Arch packages (via pacman)
-NATIVE_PKGS=(
-    git
-    curl
-    wget
-    htop
-    fastfetch
-    vlc
+# Remove Omarchy's pre-bundled Discord web app launcher
+echo "==> [2/5] Removing pre-bundled Discord web shortcut..."
+rm -f "$HOME/.local/share/applications/"*discord*.desktop 2>/dev/null || true
+
+# Official Arch packages
+PACMAN_PKGS=(
     discord
-    steam
+    telegram-desktop
+    vlc
+    proton-vpn-gtk-app
+    wl-clipboard
+    btop
 )
 
-# AUR packages (via yay)
-AUR_PKGS=(
-    zen-browser-bin
-    visual-studio-code-bin
-    spotify
-)
+echo "==> [3/5] Installing official repository packages..."
+sudo pacman -S --needed --noconfirm "${PACMAN_PKGS[@]}"
 
-echo "==> [2/4] Installing official repository packages..."
-sudo pacman -S --needed --noconfirm "${NATIVE_PKGS[@]}"
-
-echo "==> [3/4] Installing AUR packages via yay..."
-# Check if yay exists; install if absent
+# Ensure yay is present for AUR packages
 if ! command -v yay &> /dev/null; then
-    echo "yay not detected. Installing yay..."
+    echo "==> Installing yay helper..."
     sudo pacman -S --needed --noconfirm base-devel git
     git clone https://aur.archlinux.org/yay-bin.git /tmp/yay-bin
     (cd /tmp/yay-bin && makepkg -si --noconfirm)
     rm -rf /tmp/yay-bin
 fi
 
+# AUR packages
+AUR_PKGS=(
+    zen-browser-bin
+    notesnook-bin
+    stremio-enhanced-bin
+    rustdesk-bin
+    antigravity-ide
+)
+
+echo "==> [4/5] Installing AUR tools..."
 yay -S --needed --noconfirm "${AUR_PKGS[@]}"
 
-echo "==> [4/4] Applying custom shortcuts and configs..."
-HYPR_CONFIG="$HOME/.config/hypr/hyprland.conf"
+# Background services
+echo "==> [5/5] Enabling background services..."
+sudo systemctl enable --now bluetooth.service 2>/dev/null || true
 
-# Ensure Hyprland config directory exists
-mkdir -p "$HOME/.config/hypr"
-
-# Append custom keybind only if it doesn't already exist
-if [ -f "$HYPR_CONFIG" ]; then
-    grep -qxF 'bind = SUPER, B, exec, zen-browser' "$HYPR_CONFIG" || \
-        echo 'bind = SUPER, B, exec, zen-browser' >> "$HYPR_CONFIG"
-fi
-
-echo "==> All tasks finished successfully! Restart your session."
+echo "==> Installation complete!"
