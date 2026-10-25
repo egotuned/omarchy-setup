@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 set -e
 
@@ -16,10 +17,17 @@ PACMAN_PKGS=(
     proton-vpn-gtk-app
     wl-clipboard
     btop
+    flatpak
 )
 
 echo "==> [3/5] Installing official repository packages..."
 sudo pacman -S --needed --noconfirm "${PACMAN_PKGS[@]}"
+
+# Ensure Flathub is configured
+if ! flatpak remotes --columns=name | grep -qx "flathub"; then
+    echo "==> Adding Flathub repository..."
+    sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+fi
 
 # Ensure yay is present
 if ! command -v yay &> /dev/null; then
@@ -34,13 +42,16 @@ fi
 AUR_PKGS=(
     zen-browser-bin
     notesnook-bin
-    stremio
     rustdesk-bin
     antigravity-ide
 )
 
 echo "==> [4/5] Installing AUR tools..."
 yay -S --needed --noconfirm "${AUR_PKGS[@]}"
+
+# Install Stremio via Flatpak
+echo "==> Installing Stremio via Flatpak..."
+flatpak install --system -y flathub com.stremio.Stremio
 
 # Background services
 echo "==> [5/5] Enabling background services..."
